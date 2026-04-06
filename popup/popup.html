@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
+  <title>StealthTab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080810;
+      --bg-card: rgba(255,255,255,0.04);
+      --bg-card-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-active: rgba(99,102,241,0.6);
+      --accent: #6366f1;
+      --accent-2: #8b5cf6;
+      --accent-glow: rgba(99,102,241,0.25);
+      --green: #10b981;
+      --green-glow: rgba(16,185,129,0.2);
+      --red: #ef4444;
+      --text: #f0f0ff;
+      --text-muted: #6060a0;
+      --text-dim: #30304a;
+    }
+
+    html, body {
+      width: 380px;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ─── AMBIENT BACKGROUND ─── */
+    body::before {
+      content: '';
+      position: fixed; top: -100px; left: -60px;
+      width: 260px; height: 260px;
+      background: radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed; bottom: -80px; right: -60px;
+      width: 220px; height: 220px;
+      background: radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; gap: 10px;
+      padding: 15px 18px 13px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      backdrop-filter: blur(10px);
+    }
+    .logo {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+    .brand { flex: 1; }
+    .brand-name {
+      font-size: 15px; font-weight: 800; letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #fff, #a5b4fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-tag { font-size: 10px; color: var(--text-muted); font-weight: 400; }
+    .header-step { font-size: 11px; color: var(--accent); font-weight: 600; letter-spacing: 0.3px; }
+
+    /* ─── STEP PROGRESS ─── */
+    .steps {
+      display: flex; gap: 5px;
+      padding: 10px 18px;
+      position: relative; z-index: 1;
+    }
+    .step-dot {
+      flex: 1; height: 2px; border-radius: 2px;
+      background: var(--border);
+      transition: all 0.4s ease;
+      position: relative; overflow: hidden;
+    }
+    .step-dot.active::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      animation: shimmer 1.5s infinite;
+    }
+    .step-dot.done { background: var(--green); }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* ─── VIEWS ─── */
+    .view {
+      display: none; padding: 14px 18px 18px;
+      position: relative; z-index: 1;
+      animation: fadeSlideIn 0.25s ease;
+    }
+    .view.active { display: block; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 1.2px;
+      color: var(--text-muted); text-transform: uppercase;
+      margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;
+    }
+
+    /* ─── TAB LIST ─── */
+    .tab-list {
+      display: flex; flex-direction: column; gap: 5px;
+      max-height: 310px; overflow-y: auto;
+      padding-right: 2px;
+    }
+    .tab-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-item:hover { background: var(--bg-card-hover); border-color: rgba(255,255,255,0.12); }
+    .tab-item.selected {
+      border-color: var(--border-active);
+      background: rgba(99,102,241,0.08);
+      box-shadow: 0 0 12px rgba(99,102,241,0.08);
+    }
+    .tab-check {
+      width: 18px; height: 18px; border-radius: 5px; flex-shrink: 0;
+      border: 1.5px solid var(--text-dim);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .tab-item.selected .tab-check {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-color: transparent;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+    .tab-check svg { width: 11px; height: 11px; opacity: 0; transition: opacity 0.2s; }
+    .tab-item.selected .tab-check svg { opacity: 1; }
+    .tab-favicon { width: 15px; height: 15px; border-radius: 3px; flex-shrink: 0; }
+    .tab-info { flex: 1; overflow: hidden; }
+    .tab-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tab-url { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+
+    /* ─── TOP ROW ─── */
+    .top-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .sel-badge {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white; padding: 3px 9px; border-radius: 99px;
+    }
+    .link-btn {
+      font-size: 11px; color: var(--text-muted); cursor: pointer;
+      transition: color 0.2s;
+    }
+    .link-btn:hover { color: #a5b4fc; }
+
+    /* ─── DECOY PICKER ─── */
+    .decoy-entry { margin-bottom: 16px; }
+    .decoy-entry-label {
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 7px;
+    }
+    .decoy-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .chip {
+      padding: 4px 10px; font-size: 11px; font-weight: 500;
+      border-radius: 7px; border: 1px solid var(--border);
+      background: var(--bg-card); color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .chip:hover { border-color: rgba(99,102,241,0.4); color: #c4b5fd; background: rgba(99,102,241,0.07); }
+    .chip.active {
+      border-color: var(--accent); color: #a5b4fc;
+      background: rgba(99,102,241,0.15);
+      box-shadow: 0 0 8px rgba(99,102,241,0.15);
+    }
+    .custom-url {
+      width: 100%; margin-top: 6px; padding: 7px 10px; font-size: 11px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); outline: none;
+      font-family: inherit; transition: border-color 0.2s; display: none;
+    }
+    .custom-url.show { display: block; }
+    .custom-url:focus { border-color: var(--accent); }
+
+    /* ─── AUTH SETUP ─── */
+    .auth-cards { display: flex; gap: 8px; margin-bottom: 16px; }
+    .auth-card {
+      flex: 1; padding: 16px 8px; border-radius: 13px;
+      border: 1.5px solid var(--border); background: var(--bg-card);
+      cursor: pointer; text-align: center; transition: all 0.25s;
+      position: relative; overflow: hidden;
+    }
+    .auth-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .auth-card.selected { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+    .auth-card.selected::before { opacity: 0.12; }
+    .auth-card-icon { font-size: 30px; margin-bottom: 7px; position: relative; z-index: 1; }
+    .auth-card-label { font-size: 12px; font-weight: 600; color: var(--text-muted); position: relative; z-index: 1; }
+    .auth-card.selected .auth-card-label { color: #c4b5fd; }
+
+    /* ─── FIELDS ─── */
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.8px; color: var(--text-muted);
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    .field input {
+      width: 100%; padding: 9px 13px; font-size: 13px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); outline: none;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .strength-bar { height: 3px; border-radius: 3px; background: var(--border); margin-top: 6px; overflow: hidden; }
+    .strength-fill { height: 100%; border-radius: 3px; width: 0; transition: width 0.4s, background 0.4s; }
+    .field-hint { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ─── INFO BOX ─── */
+    .info-box {
+      padding: 11px 13px; border-radius: 10px;
+      border: 1px solid rgba(16,185,129,0.25);
+      background: rgba(16,185,129,0.07);
+      font-size: 11px; color: #6ee7b7; line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .warn-box {
+      padding: 11px 13px; border-radius: 10px;
+      border: 1px solid rgba(245,158,11,0.25);
+      background: rgba(245,158,11,0.07);
+      font-size: 11px; color: #fcd34d; line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    /* ─── SUMMARY ─── */
+    .summary-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .summary-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 10px;
+    }
+    .summary-name { font-size: 12px; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .summary-arrow { font-size: 10px; color: var(--accent); }
+    .summary-decoy { font-size: 10px; color: var(--text-muted); }
+
+    /* ─── LOCKED LIST ─── */
+    .locked-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 10px; margin-bottom: 5px;
+      transition: border-color 0.2s;
+    }
+    .locked-item:hover { border-color: rgba(255,255,255,0.12); }
+    .locked-name { font-size: 12px; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .status-pill { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 99px; text-transform: uppercase; }
+    .status-pill.locked { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+    .status-pill.unlocked { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+    .unlock-mini-btn, .lock-mini-btn {
+      font-size: 11px; padding: 3px 9px; border-radius: 7px;
+      cursor: pointer; transition: all 0.2s; font-family: inherit;
+    }
+    .unlock-mini-btn {
+      border: 1px solid rgba(99,102,241,0.3); background: rgba(99,102,241,0.1);
+      color: #a5b4fc;
+    }
+    .unlock-mini-btn:hover { background: rgba(99,102,241,0.2); border-color: var(--accent); }
+    .lock-mini-btn {
+      border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.1);
+      color: #f87171;
+    }
+    .lock-mini-btn:hover { background: rgba(239,68,68,0.2); }
+
+    /* ─── BUTTONS ─── */
+    .btn-row { display: flex; gap: 8px; margin-top: 14px; }
+    .btn {
+      flex: 1; padding: 10px 14px; border-radius: 10px; font-size: 13px;
+      font-weight: 600; cursor: pointer; border: none;
+      font-family: inherit; transition: all 0.2s; letter-spacing: -0.1px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      box-shadow: 0 4px 15px var(--accent-glow);
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px var(--accent-glow); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { background: rgba(99,102,241,0.2); color: #404060; cursor: not-allowed; box-shadow: none; transform: none; }
+    .btn-ghost { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg-card-hover); color: var(--text); }
+    .btn-red {
+      background: rgba(239,68,68,0.15); color: #f87171;
+      border: 1px solid rgba(239,68,68,0.25);
+    }
+    .btn-red:hover { background: rgba(239,68,68,0.25); }
+
+    /* ─── EMPTY STATE ─── */
+    .empty {
+      text-align: center; padding: 2.5rem 1rem;
+      color: var(--text-dim);
+    }
+    .empty-icon { font-size: 38px; margin-bottom: 10px; }
+    .empty p { font-size: 12px; color: var(--text-muted); }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.4); }
+
+    /* ─── MESSAGE ─── */
+    .msg {
+      font-size: 11px; padding: 8px 12px; border-radius: 8px;
+      margin-top: 8px; display: none; line-height: 1.5;
+    }
+    .msg.err { display: block; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #f87171; }
+    .msg.ok { display: block; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: #34d399; }
+
+    /* divider */
+    .divider { height: 1px; background: var(--border); margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">🛡</div>
+    <div class="brand">
+      <div class="brand-name">StealthTab</div>
+      <div class="brand-tag">Private tab cloaking</div>
+    </div>
+    <div class="header-step" id="header-step">Step 1 of 4</div>
+  </div>
+
+  <!-- PROGRESS DOTS -->
+  <div class="steps">
+    <div class="step-dot active"  id="dot-1"></div>
+    <div class="step-dot"         id="dot-2"></div>
+    <div class="step-dot"         id="dot-3"></div>
+    <div class="step-dot"         id="dot-4"></div>
+  </div>
+
+  <!-- ══════════════ VIEW 1: SELECT TABS ══════════════ -->
+  <div class="view active" id="view-1">
+    <div class="top-row">
+      <div class="section-label" style="margin:0">Open Tabs</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span class="link-btn" id="select-all-btn">Select all</span>
+        <span class="sel-badge" id="sel-count">0 selected</span>
+      </div>
+    </div>
+    <div class="tab-list" id="tab-list">
+      <div class="empty"><div class="empty-icon">⏳</div><p>Loading…</p></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="next-1" disabled>Choose Decoys →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ VIEW 2: DECOY PICKER ══════════════ -->
+  <div class="view" id="view-2">
+    <div class="section-label">Choose Cover Websites</div>
+    <div id="decoy-list" style="max-height:330px;overflow-y:auto;padding-right:2px;"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="back-2">← Back</button>
+      <button class="btn btn-primary" id="next-2">Set Auth →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ VIEW 3: AUTH METHOD ══════════════ -->
+  <div class="view" id="view-3">
+    <div class="section-label">Authentication Method</div>
+    <div class="auth-cards">
+      <div class="auth-card selected" id="card-password">
+        <div class="auth-card-icon">🔑</div>
+        <div class="auth-card-label">Password</div>
+      </div>
+      <div class="auth-card" id="card-biometric">
+        <div class="auth-card-icon">🫆</div>
+        <div class="auth-card-label">Fingerprint</div>
+      </div>
+    </div>
+
+    <div id="setup-password">
+      <div class="field">
+        <label>Master Password</label>
+        <input type="password" id="pw-new" placeholder="Create a strong password">
+        <div class="strength-bar"><div class="strength-fill" id="pw-strength"></div></div>
+        <div class="field-hint" id="pw-hint">Enter a password to see strength</div>
+      </div>
+      <div class="field">
+        <label>Confirm Password</label>
+        <input type="password" id="pw-confirm" placeholder="Re-enter password">
+      </div>
+    </div>
+
+    <div id="setup-biometric" style="display:none">
+      <div style="text-align:center;padding:1rem 0 0.5rem">
+        <div style="font-size:44px;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(99,102,241,0.5))">🫆</div>
+        <p style="font-size:12px;color:var(--text-muted);line-height:1.7">Your device's built-in fingerprint sensor will secure your tabs. Fastest and most seamless.</p>
+      </div>
+      <div class="divider"></div>
+      <div class="field">
+        <label>Backup Password (fallback)</label>
+        <input type="password" id="pw-backup" placeholder="Used if fingerprint fails">
+      </div>
+    </div>
+
+    <div class="msg" id="auth-msg"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="back-3">← Back</button>
+      <button class="btn btn-primary" id="next-3">🔒 Lock Selected Tabs</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ VIEW 4: CONFIRM ══════════════ -->
+  <div class="view" id="view-4">
+    <div class="section-label">Tabs Secured</div>
+    <div class="summary-list" id="summary-list"></div>
+    <div class="info-box">
+      ✅ Real URLs encrypted with <strong>AES-256-GCM</strong>. Click the <strong>🔒</strong> icon in your browser toolbar to unlock any tab.
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="btn-manage">View Private Tabs</button>
+      <button class="btn btn-red" id="btn-lock-all">Lock All Now</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ VIEW 5: MANAGE ══════════════ -->
+  <div class="view" id="view-5">
+    <div class="top-row">
+      <div class="section-label" style="margin:0">Private Tabs</div>
+      <span class="link-btn" id="btn-add-more">+ Hide more</span>
+    </div>
+    <div id="locked-list">
+      <div class="empty"><div class="empty-icon">🔓</div><p>No private tabs yet.<br>Click an open tab to hide it.</p></div>
+    </div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn btn-red" id="btn-lock-all-2">Lock All</button>
+    </div>
+  </div>
+
+  <script src="../utils/storage.js"></script>
+  <script src="../auth/crypto.js"></script>
+  <script src="../auth/webauthn.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

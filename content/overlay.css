@@ -1,0 +1,107 @@
+/* StealthTab Overlay — uses !important throughout to override any page CSS */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+#__st_overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483647 !important;
+  background: #07070f !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  overflow: hidden !important;
+  animation: __st_fadein 0.35s ease !important;
+  user-select: none !important;
+  pointer-events: all !important;
+}
+
+/* Ambient glow orbs */
+#__st_overlay::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -150px !important; left: -100px !important;
+  width: 500px !important; height: 500px !important;
+  background: radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 65%) !important;
+  pointer-events: none !important; z-index: 0 !important;
+}
+#__st_overlay::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: -100px !important; right: -100px !important;
+  width: 420px !important; height: 420px !important;
+  background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 65%) !important;
+  pointer-events: none !important; z-index: 0 !important;
+}
+
+#__st_card {
+  position: relative !important;
+  z-index: 1 !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.09) !important;
+  border-radius: 28px !important;
+  padding: 52px 50px 44px !important;
+  text-align: center !important;
+  max-width: 420px !important;
+  width: 90vw !important;
+  box-shadow: 0 0 80px rgba(99,102,241,0.12), 0 30px 70px rgba(0,0,0,0.6) !important;
+  backdrop-filter: blur(24px) !important;
+}
+
+#__st_orb {
+  display: block !important;
+  font-size: 58px !important;
+  margin-bottom: 24px !important;
+  filter: drop-shadow(0 0 28px rgba(99,102,241,0.65)) !important;
+  animation: __st_pulse 3.2s ease-in-out infinite !important;
+  line-height: 1 !important;
+}
+
+#__st_title {
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.6px !important;
+  margin-bottom: 14px !important;
+  background: linear-gradient(90deg, #fff 30%, #a5b4fc 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: #fff !important;
+}
+
+#__st_desc {
+  font-size: 14px !important;
+  color: #7070a0 !important;
+  line-height: 1.8 !important;
+  margin-bottom: 0 !important;
+}
+
+#__st_badge {
+  display: inline-block !important;
+  background: rgba(99,102,241,0.18) !important;
+  border: 1px solid rgba(99,102,241,0.4) !important;
+  border-radius: 7px !important;
+  padding: 1px 7px !important;
+  font-size: 13px !important;
+}
+
+#__st_rule {
+  height: 1px !important;
+  background: rgba(255,255,255,0.07) !important;
+  margin: 28px 0 18px !important;
+}
+
+#__st_hint {
+  font-size: 11px !important;
+  color: #3a3a58 !important;
+  letter-spacing: 0.2px !important;
+}
+
+@keyframes __st_fadein {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes __st_pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 22px rgba(99,102,241,0.55)); }
+  50%       { transform: scale(1.09); filter: drop-shadow(0 0 38px rgba(139,92,246,0.82)); }
+}

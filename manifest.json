@@ -1,0 +1,63 @@
+{
+  "manifest_version": 3,
+  "name": "StealthTab",
+  "version": "1.0",
+  "description": "Hide any browser tab behind a decoy website. Locked with AES-256 encryption and biometric auth.",
+
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "contextMenus",
+    "activeTab",
+    "idle",
+    "webNavigation"
+  ],
+
+  "host_permissions": ["<all_urls>"],
+
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "StealthTab — Click to manage private tabs",
+    "default_icon": {
+      "16":  "assets/icons/icon16.png",
+      "48":  "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
+
+  "icons": {
+    "16":  "assets/icons/icon16.png",
+    "48":  "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js":  ["utils/storage.js", "content/overlay.js"],
+      "css": ["content/overlay.css"],
+      "run_at": "document_end"
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "auth/auth.html",
+        "auth/auth.js",
+        "auth/crypto.js",
+        "auth/webauthn.js",
+        "utils/storage.js",
+        "assets/icons/icon16.png",
+        "assets/icons/icon48.png",
+        "assets/icons/icon128.png"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
