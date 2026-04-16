@@ -20,10 +20,20 @@
     return;
   }
 
-  // ── Detect stored auth method and pre-select ──
-  const storedMethod = await StealthStorage.get('authMethod');
-  const hasBiometric = await StealthWebAuthn.hasCredentials();
-  if (storedMethod === 'biometric' && hasBiometric) {
+  // ── 0. Migration Check ──
+  await StealthStorage.runMigration();
+
+  // Phase 1, 3 & 4: Detect enrollment
+  const store = await chrome.storage.local.get(['biometric_enabled', 'biometric_credential_id', 'authMethod']);
+  const isEnabled    = store.biometric_enabled;
+  const hasCred      = !!store.biometric_credential_id; // 🔐 Double-check enrollment
+  const storedMethod = store.authMethod;
+
+  // Logic to hide/disable biometric button if not enrolled
+  if (!isEnabled || !hasCred) {
+    document.getElementById('btn-toggle-bio').style.display = 'none';
+    switchMethod('password');
+  } else if (storedMethod === 'biometric') {
     switchMethod('biometric');
   } else {
     switchMethod('password');
@@ -62,7 +72,8 @@
       const verifyToken = await StealthStorage.get('verifyToken');
 
       if (!saltArr) {
-        showMsg('No password has been configured. Open the extension popup to set one.', 'err');
+        // 🔐 Resilient Reset: Handle missing storage after local.clear()
+        showMsg('Encryption keys missing. Your storage may have been reset. Please close this tab and re-setup in the popup.', 'err');
         return;
       }
 
@@ -106,46 +117,59 @@
   document.getElementById('unlock-bio-btn').addEventListener('click', doBiometricUnlock);
 
   async function doBiometricUnlock() {
-    if (!StealthWebAuthn.isSupported()) {
-      showMsg('Fingerprint authentication is not available in this browser.', 'err');
-      return;
-    }
-
-    const hasCreds = await StealthWebAuthn.hasCredentials();
-    if (!hasCreds) {
-      showMsg('No fingerprint registered. Please use password, or re-setup in the popup.', 'err');
-      switchMethod('password');
-      return;
-    }
-
+    // 🔐 Critical Improvement #5: Authentication MUST only run in click handler (User Gesture)
     const btn = document.getElementById('unlock-bio-btn');
     btn.disabled = true;
     btn.textContent = 'Waiting for fingerprint…';
     showMsg('', '');
 
     try {
+      // 🔐 WebAuthn Engine v4.0 handles fresh challenge & ID existence check internally
       const result = await StealthWebAuthn.verifyCredential();
 
       if (result.verified) {
-        // Biometric says WHO you are. But the AES key comes from backup password.
-        // Retrieve encrypted backup password or prompt.
-        const backupSaltArr = await StealthStorage.get('backupSalt');
-        if (backupSaltArr) {
-          // If we have a backup salt, we can ask for the backup password to re-derive the key
-          // if the sessionKey is currently null in the background.
-          const resp = await sendMsg({ type: 'AUTH_SUCCESS', tabId: targetTabId });
+        const masterSaltArr = await StealthStorage.get('masterSalt');
+        
+        // 🔐 Architectural Correction: Retrieve session-cached password to derive key
+        const sessionStore = await chrome.storage.session.get('backupPassword');
+        const backupPw = sessionStore.backupPassword;
+
+        if (masterSaltArr && backupPw) {
+          const salt = new Uint8Array(masterSaltArr);
+          const key  = await deriveKey(backupPw, salt);
+          const keyBytes = await exportKeyBytes(key);
+
+          const resp = await sendMsg({ 
+            type: 'SET_KEY_AND_UNLOCK', 
+            keyBytes, 
+            tabId: targetTabId 
+          });
+
           if (resp?.ok) {
             showMsg('✅ Fingerprint accepted!', 'ok');
             setTimeout(() => window.close(), 900);
             return;
           }
         }
-        // No backup or session expired — ask for password to re-derive key
-        showMsg('Fingerprint accepted! Session expired — please re-enter your backup password.', 'warn');
+        
+        // Fallback: If session key/password is missing (browser restart), ask for it once.
+        showMsg('Fingerprint accepted! Please enter your password below to finalize unlocking.', 'warn');
         switchMethod('password');
       }
     } catch (err) {
-      showMsg(err.message, 'err');
+      // ⭐ Optimized Error reporting (Using err.name for reliability)
+      console.error('[StealthTab Auth] Biometric error:', err);
+      
+      if (err.name === 'NotAllowedError') {
+        showMsg('Authentication cancelled or hardware unavailable.', 'warn');
+      } else if (err.name === 'SecurityError') {
+        showMsg('Security block: Please ensure you are on a trusted origin.', 'err');
+      } else if (err.name === 'AbortError') {
+        showMsg('Operation aborted.', 'warn');
+      } else {
+        showMsg(err.message || 'Verification failed.', 'err');
+        setTimeout(() => switchMethod('password'), 2500);
+      }
     } finally {
       btn.disabled = false;
       btn.textContent = 'Use Fingerprint →';

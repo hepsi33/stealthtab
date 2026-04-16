@@ -418,10 +418,19 @@
     </div>
 
     <div id="setup-biometric" style="display:none">
-      <div style="text-align:center;padding:1rem 0 0.5rem">
+      <div style="text-align:center;padding:0.5rem 0">
         <div style="font-size:44px;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(99,102,241,0.5))">🫆</div>
-        <p style="font-size:12px;color:var(--text-muted);line-height:1.7">Your device's built-in fingerprint sensor will secure your tabs. Fastest and most seamless.</p>
+        <p style="font-size:12px;color:var(--text-muted);line-height:1.7" id="bio-setup-desc">Your device's built-in fingerprint sensor will secure your tabs.</p>
       </div>
+
+      <!-- 🔐 New Dedicated Registration Section -->
+      <div id="bio-reg-section" style="margin-top:10px; text-align:center;">
+        <button class="btn btn-ghost" id="btn-register-bio" style="width:100%; border-style:dashed; border-color:var(--accent); color:var(--accent);">
+          ➕ Register Fingerprint
+        </button>
+        <div id="bio-reg-status" class="msg" style="margin-top:8px"></div>
+      </div>
+
       <div class="divider"></div>
       <div class="field">
         <label>Backup Password (fallback)</label>
@@ -470,47 +479,6 @@
     </div>
   </div>
 
-  <!-- ══════════════ VIEW 6: FORGOT PASSWORD ══════════════ -->
-  <div class="view" id="view-6">
-    <div class="section-label">Recovery Code</div>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Enter your 4-letter recovery code to reset your password. You have 5 attempts before being locked out for 5 minutes.</p>
-    
-    <div class="field">
-      <label>Recovery Code</label>
-      <input type="text" id="recovery-input" placeholder="e.g. STAR" maxlength="4" style="text-transform:uppercase" autocomplete="off">
-    </div>
-    
-    <div class="msg" id="recovery-msg"></div>
-    
-    <div class="btn-row">
-      <button class="btn btn-ghost" id="back-6">← Back</button>
-      <button class="btn btn-primary" id="verify-recovery">Verify Code</button>
-    </div>
-  </div>
-
-  <!-- ══════════════ VIEW 7: RESET PASSWORD ══════════════ -->
-  <div class="view" id="view-7">
-    <div class="section-label">Reset Password</div>
-    <div class="info-box" style="margin-bottom:16px">Recovery code verified! Enter a new password.</div>
-    
-    <div class="field">
-      <label>New Password</label>
-      <input type="password" id="pw-reset-new" placeholder="Create a new password" maxlength="128">
-      <div class="strength-bar"><div class="strength-fill" id="pw-reset-strength"></div></div>
-      <div class="field-hint" id="pw-reset-hint">Enter a password to see strength</div>
-    </div>
-    <div class="field">
-      <label>Confirm New Password</label>
-      <input type="password" id="pw-reset-confirm" placeholder="Re-enter new password" maxlength="128">
-    </div>
-    
-    <div class="msg" id="reset-msg"></div>
-    
-    <div class="btn-row">
-      <button class="btn btn-ghost" id="back-7">← Back</button>
-      <button class="btn btn-primary" id="submit-reset">Reset Password</button>
-    </div>
-  </div>
 
   <script src="../utils/storage.js"></script>
   <script src="../auth/crypto.js"></script>

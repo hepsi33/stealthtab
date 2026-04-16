@@ -9,10 +9,11 @@ const STORAGE_KEYS = {
   VERIFY_TOKEN:      'verifyToken',
   PRIVATE_TABS:     'privateTabs',
   DECOY_SITES:       'decoySites',
-  RECOVERY_CODE_HASH: 'recovery_code_hash',
-  RECOVERY_ATTEMPTS:   'recovery_attempts',
-  RECOVERY_LOCK_UNTIL: 'recovery_lock_until',
-  BACKUP_SALT:         'backupSalt'
+  BIOMETRIC_CREDENTIAL_ID: 'biometric_credential_id',
+  BIOMETRIC_ENABLED:       'biometric_enabled',
+  BIOMETRIC_REGISTERED_AT:  'biometric_registered_at',
+  BIOMETRIC_SCHEMA_VERSION: 'biometric_schema_version',
+  SCHEMA_VERSION:           'schema_version'
 };
 
 // Reverse lookup for raw key strings
@@ -85,8 +86,6 @@ const StealthStorage = {
     await chrome.storage.local.set({ [STORAGE_KEYS.PRIVATE_TABS]: tabs });
   },
 
-  // ---------- Recovery info - removed per user request ----------
-  
   // ---------- Decoy sites ----------
   async getDecoySites() {
     const r = await chrome.storage.local.get(STORAGE_KEYS.DECOY_SITES);
@@ -102,6 +101,23 @@ const StealthStorage = {
       await chrome.storage.local.set({ [STORAGE_KEYS.DECOY_SITES]: d });
     }
     return d.filter(s => s && s.name && isValidUrl(s.url));
+  },
+  // ---------- Migration ----------
+  async runMigration() {
+    const CURRENT_VERSION = 2;
+    const r = await chrome.storage.local.get(STORAGE_KEYS.SCHEMA_VERSION);
+    const saved = r[STORAGE_KEYS.SCHEMA_VERSION] || 1;
+
+    if (saved < CURRENT_VERSION) {
+      console.log(`[StealthStorage] 🛠️ Migrating storage v${saved} → v${CURRENT_VERSION}`);
+      
+      // Cleanup legacy keys from previous versions
+      const legacy = ['RECOVERY_CODE_HASH', 'RECOVERY_ATTEMPTS', 'RECOVERY_LOCK_UNTIL', 'backupSalt'];
+      await chrome.storage.local.remove(legacy);
+      
+      await chrome.storage.local.set({ [STORAGE_KEYS.SCHEMA_VERSION]: CURRENT_VERSION });
+      console.log('[StealthStorage] ✅ Migration complete');
+    }
   }
 };
 

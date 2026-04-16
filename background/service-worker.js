@@ -146,13 +146,7 @@ async function _lockTabInternal(tabId, realUrl, decoyUrl, title, key) {
   console.log(`[StealthTab SW] ✅ Tab ${tabId} locked successfully`);
 }
 
-/**
- * Unlock a tab: decrypt real URL, navigate back.
- * @param {number} tabId
- * @returns {boolean}
- */
-async function _unlockTabInternal(tabId) {
-  // Try to restore sessionKey from session storage if null
+async function _ensureKey() {
   if (!sessionKey) {
     const s = await chrome.storage.session.get(SESSION_KEY_NAME);
     const bytes = s[SESSION_KEY_NAME];
@@ -161,8 +155,17 @@ async function _unlockTabInternal(tabId) {
       console.log('[StealthTab SW] ♻️ Session key restored from session storage');
     }
   }
+  return sessionKey;
+}
 
-  if (!sessionKey) {
+/**
+ * Unlock a tab: decrypt real URL, navigate back.
+ * @param {number} tabId
+ * @returns {boolean}
+ */
+async function _unlockTabInternal(tabId) {
+  const key = await _ensureKey();
+  if (!key) {
     console.warn(`[StealthTab SW] ⚠️ Cannot unlock tab ${tabId} — no session key`);
     return false;
   }

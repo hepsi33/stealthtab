@@ -19,5 +19,13 @@ test-results/
 dist/
 build/
 
-# Downloaded polyfill (not needed in repo — loaded from CDN or bundled separately)
+# Downloaded polyfill (not needed in repo)
 utils/browser-polyfill.min.js
+
+# Test & Debug junk
+test-profile-*/
+test-profile-temp/
+test-pw.js
+debug-ext.js
+target.html
+decoy.html
