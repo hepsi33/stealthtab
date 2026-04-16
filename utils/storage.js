@@ -1,10 +1,6 @@
 /**
  * StealthTab Storage Helpers
  * SECURITY: Validates all inputs before storage operations.
- *
- * Note: get/set accept raw string keys (e.g. 'masterSalt', 'verifyToken')
- * as well as the constant-name lookup (e.g. 'MASTER_SALT').
- * getPrivateTabs/updatePrivateTab/removePrivateTab use PRIVATE_TABS key directly.
  */
 
 const STORAGE_KEYS = {
@@ -15,10 +11,11 @@ const STORAGE_KEYS = {
   DECOY_SITES:       'decoySites',
   RECOVERY_CODE_HASH: 'recovery_code_hash',
   RECOVERY_ATTEMPTS:   'recovery_attempts',
-  RECOVERY_LOCK_UNTIL: 'recovery_lock_until'
+  RECOVERY_LOCK_UNTIL: 'recovery_lock_until',
+  BACKUP_SALT:         'backupSalt'
 };
 
-// Build a reverse lookup: 'masterSalt' → 'masterSalt' (for raw-string calls)
+// Reverse lookup for raw key strings
 const _VALID_KEYS = new Set(Object.values(STORAGE_KEYS));
 
 function isValidTabId(id) {
@@ -39,29 +36,21 @@ function sanitizeString(str, maxLen = 500) {
 }
 
 const StealthStorage = {
-
-  /**
-   * Get a value from storage.
-   * @param {string} key  Raw key string (e.g. 'masterSalt') or constant name ('MASTER_SALT')
-   */
+  // ---------- Generic get / set ----------
   async get(key) {
-    // Accept both 'masterSalt' (raw) and 'MASTER_SALT' (constant name)
     const realKey = _VALID_KEYS.has(key) ? key : STORAGE_KEYS[key];
     if (!realKey) return undefined;
     const r = await chrome.storage.local.get(realKey);
     return r[realKey];
   },
 
-  /**
-   * Set a value in storage.
-   * @param {string} key  Raw key string or constant name
-   */
   async set(key, value) {
     const realKey = _VALID_KEYS.has(key) ? key : STORAGE_KEYS[key];
     if (!realKey) return;
     await chrome.storage.local.set({ [realKey]: value });
   },
 
+  // ---------- Private tabs ----------
   async getPrivateTabs() {
     const r = await chrome.storage.local.get(STORAGE_KEYS.PRIVATE_TABS);
     const data = r[STORAGE_KEYS.PRIVATE_TABS];
@@ -90,74 +79,31 @@ const StealthStorage = {
 
   async removePrivateTab(tabId) {
     if (!isValidTabId(tabId)) return;
-    const r    = await chrome.storage.local.get(STORAGE_KEYS.PRIVATE_TABS);
+    const r = await chrome.storage.local.get(STORAGE_KEYS.PRIVATE_TABS);
     const tabs = r[STORAGE_KEYS.PRIVATE_TABS] || {};
     delete tabs[tabId];
     await chrome.storage.local.set({ [STORAGE_KEYS.PRIVATE_TABS]: tabs });
   },
 
+  // ---------- Recovery info - removed per user request ----------
+  
+  // ---------- Decoy sites ----------
   async getDecoySites() {
     const r = await chrome.storage.local.get(STORAGE_KEYS.DECOY_SITES);
     let d = r[STORAGE_KEYS.DECOY_SITES];
     if (!Array.isArray(d) || d.length === 0) {
       d = [
-        { name: 'LinkedIn',  url: 'https://www.linkedin.com'  },
-        { name: 'YouTube',   url: 'https://www.youtube.com'   },
-        { name: 'Google',    url: 'https://www.google.com'    },
-        { name: 'GitHub',    url: 'https://github.com'        },
+        { name: 'LinkedIn',  url: 'https://www.linkedin.com' },
+        { name: 'YouTube',   url: 'https://www.youtube.com' },
+        { name: 'Google',    url: 'https://www.google.com' },
+        { name: 'GitHub',    url: 'https://github.com' },
         { name: 'Wikipedia', url: 'https://www.wikipedia.org' }
       ];
       await chrome.storage.local.set({ [STORAGE_KEYS.DECOY_SITES]: d });
     }
     return d.filter(s => s && s.name && isValidUrl(s.url));
-  },
-
-  async setRecoveryCodeHash(hash) {
-    if (!hash || typeof hash !== 'string') return;
-    await chrome.storage.local.set({ [STORAGE_KEYS.RECOVERY_CODE_HASH]: hash });
-  },
-
-  async getRecoveryCodeHash() {
-    const r = await chrome.storage.local.get(STORAGE_KEYS.RECOVERY_CODE_HASH);
-    return r[STORAGE_KEYS.RECOVERY_CODE_HASH];
-  },
-
-  async hasRecoveryCode() {
-    const hash = await this.getRecoveryCodeHash();
-    return !!(hash && hash.length > 0);
-  },
-
-  async getRecoveryAttempts() {
-    const r = await chrome.storage.local.get(STORAGE_KEYS.RECOVERY_ATTEMPTS);
-    return r[STORAGE_KEYS.RECOVERY_ATTEMPTS] || 0;
-  },
-
-  async incrementRecoveryAttempts() {
-    const current = await this.getRecoveryAttempts();
-    await chrome.storage.local.set({ [STORAGE_KEYS.RECOVERY_ATTEMPTS]: current + 1 });
-  },
-
-  async resetRecoveryAttempts() {
-    await chrome.storage.local.set({ [STORAGE_KEYS.RECOVERY_ATTEMPTS]: 0 });
-  },
-
-  async setRecoveryLockUntil(timestamp) {
-    await chrome.storage.local.set({ [STORAGE_KEYS.RECOVERY_LOCK_UNTIL]: timestamp });
-  },
-
-  async getRecoveryLockUntil() {
-    const r = await chrome.storage.local.get(STORAGE_KEYS.RECOVERY_LOCK_UNTIL);
-    return r[STORAGE_KEYS.RECOVERY_LOCK_UNTIL] || 0;
-  },
-
-  async isRecoveryLocked() {
-    const lockUntil = await this.getRecoveryLockUntil();
-    return lockUntil > Date.now();
-  },
-
-  async getRecoveryLockRemainingSeconds() {
-    const lockUntil = await this.getRecoveryLockUntil();
-    const remaining = lockUntil - Date.now();
-    return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
   }
 };
+
+
+// No export needed — used via global variable in scripts/importScripts

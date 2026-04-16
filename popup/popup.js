@@ -296,25 +296,30 @@ async function onNext3() {
   if (authMethod === 'password') {
     password        = ($('pw-new')?.value     || '').trim();
     const confirm   = ($('pw-confirm')?.value || '').trim();
-    if (password.length < 8) {
-      showMsg(msgEl, 'Password must be at least 8 characters.', 'err'); return;
+    if (password.length < 4) {
+      showMsg(msgEl, 'Password must be at least 4 characters.', 'err'); return;
+    }
+    if (password.length > 128) {
+      showMsg(msgEl, 'Password must be at most 128 characters.', 'err'); return;
     }
     if (password !== confirm) {
       showMsg(msgEl, 'Passwords do not match.', 'err'); return;
     }
   } else {
     password = ($('pw-backup')?.value || '').trim();
-    if (password.length < 8) {
-      showMsg(msgEl, 'Backup password must be at least 8 characters.', 'err'); return;
+    const confirm = ($('pw-backup-confirm')?.value || '').trim();
+    if (password.length < 4) {
+      showMsg(msgEl, 'Backup password must be at least 4 characters.', 'err'); return;
+    }
+    if (password.length > 128) {
+      showMsg(msgEl, 'Backup password must be at most 128 characters.', 'err'); return;
+    }
+    if (password !== confirm) {
+      showMsg(msgEl, 'Backup passwords do not match.', 'err'); return;
     }
   }
 
-  const recoveryInput = $('recovery-code');
-  const recoveryCode = recoveryInput ? recoveryInput.value.trim().toUpperCase() : '';
-  
-  if (!recoveryCode || recoveryCode.length !== 4 || !/^[A-Z]{4}$/.test(recoveryCode)) {
-    showMsg(msgEl, 'Recovery code must be exactly 4 letters (A-Z).', 'err'); return;
-  }
+  // Recovery code removed per user request
 
   const btn = $('next-3');
   if (btn) { btn.textContent = '⏳ Encrypting…'; btn.disabled = true; }
@@ -328,19 +333,30 @@ async function onNext3() {
     await StealthStorage.set('verifyToken', verifyToken);
     await StealthStorage.set('authMethod',  authMethod);
 
-    const recoveryHash = await sha256Hash(recoveryCode);
-    await StealthStorage.setRecoveryCodeHash(recoveryHash);
-    console.log('[StealthTab Popup] Recovery code hash stored (not the code itself)');
+    // await StealthStorage.setRecoveryCodeHash(recoveryHash); // removed
+    
+    // Store backup salt for biometric fallback
+    if (authMethod === 'biometric') {
+      await StealthStorage.set('backupSalt', Array.from(salt));
+      // Optionally encrypt the password itself for one-tap unlock (advanced)
+    }
+    
+    console.log('[StealthTab Popup] Security credentials stored');
 
     // 3. Register biometric if chosen
     if (authMethod === 'biometric') {
       try {
         if (!StealthWebAuthn.isSupported()) throw new Error('WebAuthn not available on this device');
+        
+        // Increased delay and UI feedback ensures browser focus is stable
+        showMsg(msgEl, 'Preparing fingerprint sensor...', 'warn');
+        await new Promise(r => setTimeout(r, 600));
+        
         await StealthWebAuthn.registerCredential('stealthtab-user');
         console.log('[StealthTab Popup] ✅ Biometric registered');
       } catch (bioErr) {
         console.warn('[StealthTab Popup] Biometric setup failed:', bioErr.message);
-        showMsg(msgEl, `Biometric unavailable — falling back to password. (${bioErr.message})`, 'warn');
+        showMsg(msgEl, `Biometric setup failed (${bioErr.message}). Falling back to password.`, 'warn');
         await StealthStorage.set('authMethod', 'password');
       }
     }
@@ -606,8 +622,12 @@ async function resetPassword() {
   const newPw = ($('pw-reset-new')?.value || '').trim();
   const confirm = ($('pw-reset-confirm')?.value || '').trim();
 
-  if (newPw.length < 8) {
-    showMsg(msgEl, 'Password must be at least 8 characters.', 'err');
+  if (newPw.length < 4) {
+    showMsg(msgEl, 'Password must be at least 4 characters.', 'err');
+    return;
+  }
+  if (newPw.length > 128) {
+    showMsg(msgEl, 'Password must be at most 128 characters.', 'err');
     return;
   }
   if (newPw !== confirm) {

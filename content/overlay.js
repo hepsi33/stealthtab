@@ -16,6 +16,8 @@
   window.__stealthTabInjected = true;
 
   const OVERLAY_ID = '__st_overlay';
+  let _guardObserver = null;
+  let _activityThrottle = false;
 
   // ── Check tab state from service worker ──────────────────────────────
   let tabState = null;
@@ -44,9 +46,9 @@
   });
 
   // ── Activity reporting (throttled to 1 per 5s) ───────────────────────
-  let _activityThrottle = false;
   function reportActivity() {
     if (_activityThrottle) return;
+    if (!chrome.runtime?.id) return; // Context invalidated — ignore
     _activityThrottle = true;
     chrome.runtime.sendMessage({ type: 'RESET_TAB_TIMER' }).catch(() => {});
     setTimeout(() => { _activityThrottle = false; }, 5000);
@@ -55,9 +57,21 @@
     .forEach(ev => window.addEventListener(ev, reportActivity, { passive: true }));
 
   // ── Overlay management ───────────────────────────────────────────────
-  let _guardObserver = null;
 
   function showOverlay() {
+    // SECURITY: If we are on the decoy site, hide the overlay (Stealth Mode)
+    // Only show the overlay if we are NOT on the decoy site.
+    if (tabState?.decoyUrl) {
+      try {
+        const decoyOrigin = new URL(tabState.decoyUrl).origin;
+        if (window.location.origin === decoyOrigin) {
+          console.log('[StealthTab Content] On decoy site — suppressing overlay');
+          removeOverlay();
+          return;
+        }
+      } catch (e) { /* ignore invalid URL */ }
+    }
+
     if (document.getElementById(OVERLAY_ID)) return;  // already shown
 
     // Block all scrolling/interaction on the underlying page

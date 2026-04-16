@@ -5,6 +5,11 @@ Thumbs.db
 # Node (if any tooling added later)
 node_modules/
 npm-debug.log*
+package-lock.json
+
+# Testing
+test-profile/
+test-results/
 
 # Editor
 .vscode/

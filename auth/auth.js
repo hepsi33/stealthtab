@@ -131,16 +131,13 @@
         // Retrieve encrypted backup password or prompt.
         const backupSaltArr = await StealthStorage.get('backupSalt');
         if (backupSaltArr) {
-          const encryptedBackup = await StealthStorage.get('encryptedBackupPw');
-          if (encryptedBackup) {
-            // We have an encrypted backup — try to unlock directly via AUTH_SUCCESS
-            // Background still has the session key if it was set in this session
-            const resp = await sendMsg({ type: 'AUTH_SUCCESS', tabId: targetTabId });
-            if (resp?.ok) {
-              showMsg('✅ Fingerprint accepted!', 'ok');
-              setTimeout(() => window.close(), 900);
-              return;
-            }
+          // If we have a backup salt, we can ask for the backup password to re-derive the key
+          // if the sessionKey is currently null in the background.
+          const resp = await sendMsg({ type: 'AUTH_SUCCESS', tabId: targetTabId });
+          if (resp?.ok) {
+            showMsg('✅ Fingerprint accepted!', 'ok');
+            setTimeout(() => window.close(), 900);
+            return;
           }
         }
         // No backup or session expired — ask for password to re-derive key

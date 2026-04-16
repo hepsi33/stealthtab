@@ -407,18 +407,13 @@
     <div id="setup-password">
       <div class="field">
         <label>Master Password</label>
-        <input type="password" id="pw-new" placeholder="Create a strong password">
+        <input type="password" id="pw-new" placeholder="Create a strong password" maxlength="128">
         <div class="strength-bar"><div class="strength-fill" id="pw-strength"></div></div>
         <div class="field-hint" id="pw-hint">Enter a password to see strength</div>
       </div>
       <div class="field">
         <label>Confirm Password</label>
-        <input type="password" id="pw-confirm" placeholder="Re-enter password">
-      </div>
-      <div class="field">
-        <label>Recovery Code (4 letters)</label>
-        <input type="text" id="recovery-code" placeholder="e.g. STAR" maxlength="4" autocomplete="off">
-        <div class="field-hint">Used to reset password if forgotten. 4 letters only, uppercase.</div>
+        <input type="password" id="pw-confirm" placeholder="Re-enter password" maxlength="128">
       </div>
     </div>
 
@@ -430,7 +425,11 @@
       <div class="divider"></div>
       <div class="field">
         <label>Backup Password (fallback)</label>
-        <input type="password" id="pw-backup" placeholder="Used if fingerprint fails">
+        <input type="password" id="pw-backup" placeholder="Used if fingerprint fails" maxlength="128">
+      </div>
+      <div class="field">
+        <label>Confirm Backup Password</label>
+        <input type="password" id="pw-backup-confirm" placeholder="Re-enter backup password" maxlength="128">
       </div>
     </div>
 
@@ -496,13 +495,13 @@
     
     <div class="field">
       <label>New Password</label>
-      <input type="password" id="pw-reset-new" placeholder="Create a new password">
+      <input type="password" id="pw-reset-new" placeholder="Create a new password" maxlength="128">
       <div class="strength-bar"><div class="strength-fill" id="pw-reset-strength"></div></div>
       <div class="field-hint" id="pw-reset-hint">Enter a password to see strength</div>
     </div>
     <div class="field">
       <label>Confirm New Password</label>
-      <input type="password" id="pw-reset-confirm" placeholder="Re-enter new password">
+      <input type="password" id="pw-reset-confirm" placeholder="Re-enter new password" maxlength="128">
     </div>
     
     <div class="msg" id="reset-msg"></div>

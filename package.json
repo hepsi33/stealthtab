@@ -1,0 +1,24 @@
+{
+  "name": "stealthtab",
+  "version": "1.0.0",
+  "description": "> Hide any browser tab behind a convincing decoy website. Secured with AES-256-GCM encryption and optional biometric authentication.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hepsi33/stealthtab.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/hepsi33/stealthtab/issues"
+  },
+  "homepage": "https://github.com/hepsi33/stealthtab#readme",
+  "dependencies": {
+    "playwright": "^1.59.1"
+  }
+}

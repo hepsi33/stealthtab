@@ -19,8 +19,9 @@ importScripts('../utils/storage.js', '../auth/crypto.js');
 const INACTIVITY_MS  = 30 * 60 * 1000;  // 30 minutes
 const RATE_LIMIT_MS  = 1500;             // min ms between auth attempts
 
-// ── In-memory state (lost on SW termination — by design) ──────────────────
-let sessionKey  = null;   // CryptoKey — NEVER written to disk
+// ── In-memory/Session state ──────────────────────────────────────────────
+let sessionKey  = null;   // CryptoKey — Cached during SW lifetime
+const SESSION_KEY_NAME = 'st_session_key';
 let tabTimers   = {};     // tabId → setTimeout handle
 const authAttempts = new Map();   // sender.id → last attempt timestamp
 
@@ -151,6 +152,16 @@ async function _lockTabInternal(tabId, realUrl, decoyUrl, title, key) {
  * @returns {boolean}
  */
 async function _unlockTabInternal(tabId) {
+  // Try to restore sessionKey from session storage if null
+  if (!sessionKey) {
+    const s = await chrome.storage.session.get(SESSION_KEY_NAME);
+    const bytes = s[SESSION_KEY_NAME];
+    if (bytes) {
+      sessionKey = await importKeyBytes(bytes);
+      console.log('[StealthTab SW] ♻️ Session key restored from session storage');
+    }
+  }
+
   if (!sessionKey) {
     console.warn(`[StealthTab SW] ⚠️ Cannot unlock tab ${tabId} — no session key`);
     return false;
@@ -515,7 +526,8 @@ async function handleMessage(msg, sender) {
         return { error: 'Invalid keyBytes — expected 32-byte array' };
       }
       sessionKey = await importKeyBytes(msg.keyBytes);
-      console.log('[StealthTab SW] 🔑 Session key set');
+      await chrome.storage.session.set({ [SESSION_KEY_NAME]: msg.keyBytes });
+      console.log('[StealthTab SW] 🔑 Session key persisted to session storage');
       return { ok: true };
     }
 
@@ -537,6 +549,7 @@ async function handleMessage(msg, sender) {
       if (!tab) return { error: `Tab ${msg.tabId} not found — may have been closed` };
 
       await _lockTabInternal(msg.tabId, msg.url, msg.decoyUrl, tab.title || 'Private Tab', key);
+      await chrome.storage.session.set({ [SESSION_KEY_NAME]: msg.keyBytes });
       return { ok: true };
     }
 
