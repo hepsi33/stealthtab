@@ -5,12 +5,10 @@
 ---
 
 ## 📺 Demo
-<!-- 
-  TO ADD YOUR DEMO VIDEO:
-  1. Upload your video to the 'assets' folder (or GitHub issues / YouTube).
-  2. Use the syntax below:
-  ![StealthTab Demo](https://path-to-your-video.mp4)
--->
+
+https://github.com/user-attachments/assets/955bf3c6-2a8b-4a71-af1b-7b265fa5b31b
+
+
 *Protect your workflow with a single click.*
 
 ---
