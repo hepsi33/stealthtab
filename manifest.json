@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "StealthTab",
-  "version": "1.0",
-  "description": "Hide any browser tab behind a decoy website. Locked with AES-256 encryption and biometric auth.",
+  "version": "1.1",
+  "description": "Hide any browser tab behind a decoy website. Secured with AES-256-GCM encryption and optional biometric auth.",
 
   "permissions": [
     "storage",
@@ -38,10 +38,10 @@
 
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js":  ["utils/storage.js", "content/overlay.js"],
-      "css": ["content/overlay.css"],
-      "run_at": "document_end"
+      "matches":  ["http://*/*", "https://*/*"],
+      "js":       ["utils/storage.js", "content/overlay.js"],
+      "run_at":   "document_end",
+      "all_frames": false
     }
   ],
 

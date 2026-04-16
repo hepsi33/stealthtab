@@ -83,3 +83,24 @@ async function decrypt(data, key) {
 function generateSalt() {
   return crypto.getRandomValues(new Uint8Array(32));  // 256-bit salt
 }
+
+/**
+ * Hash a string using SHA-256.
+ * Returns hex string representation.
+ */
+async function sha256Hash(plaintext) {
+  const enc = new TextEncoder();
+  const data = enc.encode(String(plaintext));
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Verify an input against a stored SHA-256 hash.
+ * Returns true if match.
+ */
+async function verifyHash(plaintext, storedHash) {
+  const inputHash = await sha256Hash(plaintext);
+  return inputHash === storedHash;
+}

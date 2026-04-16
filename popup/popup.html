@@ -415,6 +415,11 @@
         <label>Confirm Password</label>
         <input type="password" id="pw-confirm" placeholder="Re-enter password">
       </div>
+      <div class="field">
+        <label>Recovery Code (4 letters)</label>
+        <input type="text" id="recovery-code" placeholder="e.g. STAR" maxlength="4" autocomplete="off">
+        <div class="field-hint">Used to reset password if forgotten. 4 letters only, uppercase.</div>
+      </div>
     </div>
 
     <div id="setup-biometric" style="display:none">
@@ -460,6 +465,51 @@
     </div>
     <div class="btn-row" style="margin-top:12px">
       <button class="btn btn-red" id="btn-lock-all-2">Lock All</button>
+    </div>
+    <div style="margin-top:16px;text-align:center">
+      <span class="link-btn" id="btn-forgot-pw">Forgot Password?</span>
+    </div>
+  </div>
+
+  <!-- ══════════════ VIEW 6: FORGOT PASSWORD ══════════════ -->
+  <div class="view" id="view-6">
+    <div class="section-label">Recovery Code</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Enter your 4-letter recovery code to reset your password. You have 5 attempts before being locked out for 5 minutes.</p>
+    
+    <div class="field">
+      <label>Recovery Code</label>
+      <input type="text" id="recovery-input" placeholder="e.g. STAR" maxlength="4" style="text-transform:uppercase" autocomplete="off">
+    </div>
+    
+    <div class="msg" id="recovery-msg"></div>
+    
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="back-6">← Back</button>
+      <button class="btn btn-primary" id="verify-recovery">Verify Code</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ VIEW 7: RESET PASSWORD ══════════════ -->
+  <div class="view" id="view-7">
+    <div class="section-label">Reset Password</div>
+    <div class="info-box" style="margin-bottom:16px">Recovery code verified! Enter a new password.</div>
+    
+    <div class="field">
+      <label>New Password</label>
+      <input type="password" id="pw-reset-new" placeholder="Create a new password">
+      <div class="strength-bar"><div class="strength-fill" id="pw-reset-strength"></div></div>
+      <div class="field-hint" id="pw-reset-hint">Enter a password to see strength</div>
+    </div>
+    <div class="field">
+      <label>Confirm New Password</label>
+      <input type="password" id="pw-reset-confirm" placeholder="Re-enter new password">
+    </div>
+    
+    <div class="msg" id="reset-msg"></div>
+    
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="back-7">← Back</button>
+      <button class="btn btn-primary" id="submit-reset">Reset Password</button>
     </div>
   </div>
 
